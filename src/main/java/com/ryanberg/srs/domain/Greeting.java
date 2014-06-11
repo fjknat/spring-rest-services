@@ -1,12 +1,6 @@
 package com.ryanberg.srs.domain;
 
-/**
- * Created with IntelliJ IDEA.
- * User: rberg
- * Date: 6/9/14
- * Time: 1:52 PM
- * To change this template use File | Settings | File Templates.
- */
+
 public class Greeting
 {
     private Long id;
