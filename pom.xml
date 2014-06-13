@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.0.2.RELEASE</version>
+        <version>1.1.1.RELEASE</version>
     </parent>
 
     <groupId>com.ryanberg</groupId>
@@ -15,6 +15,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+        <java.version>1.7</java.version>
         <main-class>com.ryanberg.srs.Application</main-class>
     </properties>
 
@@ -39,6 +40,11 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>17.0</version>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.3</version>
         </dependency>
 
 

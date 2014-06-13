@@ -1,27 +1,32 @@
 package com.ryanberg.srs.config;
 
 
-import com.ryanberg.srs.security.HeaderTokenBasedRememberMeService;
+import com.ryanberg.srs.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.RememberMeAuthenticationProvider;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
-import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+
+import javax.servlet.Filter;
+import javax.sql.DataSource;
 
 @Configuration
-@EnableWebMvcSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter
 {
 
     private static final String tokenKey = "5BD92B21-1AE5-444E-8C54-BA6DF24BFC28";
+
+    @Autowired
+    private DataSource dataSource;
+
+    @Autowired
+    private SecurityHeaderUtil headerUtil;
 
     @Autowired
     public void registerGlobalAuthentication(AuthenticationManagerBuilder auth) throws Exception
@@ -30,44 +35,55 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .withUser("user").password("password").roles("USER").and()
                 .withUser("admin").password("password").roles("USER", "ADMIN");
 
-        auth.authenticationProvider(rememberMeAuthenticationProvider());
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception
     {
-        // disable csrf
-        http.csrf().disable();
-        // apply security to all http requests
-        http.authorizeRequests().anyRequest().authenticated();
-        // do not use sessions
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        // do not redirect to login url, instead return 403 Forbidden
-        http.exceptionHandling().authenticationEntryPoint(new Http403ForbiddenEntryPoint());
-        // allow access to POST to login endpoint
-        http.formLogin().permitAll();
-        // use remember me cookie
-        http.rememberMe().rememberMeServices(tokenBasedRememberMeService());
+        RestAuthenticationSuccessHandler successHandler = new RestAuthenticationSuccessHandler();
+        successHandler.setSecurityHeaderUtil(headerUtil);
+
+        http.addFilterBefore(authenticationFilter(), LogoutFilter.class)
+
+                .csrf().disable()
+                .formLogin().successHandler(successHandler).failureHandler(new RestAuthenticationFailureHandler())
+                .loginProcessingUrl("/login")
+
+                .and()
+
+                .logout()
+                .logoutSuccessUrl("/logout")
+
+                .and()
+
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
+                .and()
+
+                .exceptionHandling()
+                .accessDeniedHandler(new RestAccessDeniedHandler())
+                .authenticationEntryPoint(new RestAuthenticationEntryPoint())
+
+                .and()
+
+                .authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/login").permitAll()
+                .antMatchers(HttpMethod.POST, "/logout").authenticated()
+                .antMatchers(HttpMethod.GET, "/**").authenticated()
+                .antMatchers(HttpMethod.POST, "/**").authenticated()
+                .antMatchers(HttpMethod.PUT, "/**").authenticated()
+                .antMatchers(HttpMethod.DELETE, "/**").authenticated()
+                .anyRequest().authenticated();
+
     }
 
-    @Bean
-    public RememberMeAuthenticationFilter rememberMeAuthenticationFilter() throws Exception
+    private Filter authenticationFilter()
     {
-        return new RememberMeAuthenticationFilter(authenticationManager(), tokenBasedRememberMeService());
+        HeaderTokenAuthenticationFilter headerAuthenticationFilter = new HeaderTokenAuthenticationFilter();
+        headerAuthenticationFilter.setUserDetailsService(userDetailsService());
+        headerAuthenticationFilter.setHeaderUtil(headerUtil);
+        return headerAuthenticationFilter;
     }
 
-    @Bean
-    public HeaderTokenBasedRememberMeService tokenBasedRememberMeService()
-    {
-        HeaderTokenBasedRememberMeService service = new HeaderTokenBasedRememberMeService(tokenKey, userDetailsService());
-        service.setAlwaysRemember(true);
-        service.setCookieName("X-Auth-Token");
-        return service;
-    }
 
-    @Bean
-    RememberMeAuthenticationProvider rememberMeAuthenticationProvider()
-    {
-        return new RememberMeAuthenticationProvider(tokenKey);
-    }
 }
