@@ -1,6 +1,7 @@
 package com.ryanberg.srs.config;
 
 
+import com.ryanberg.srs.filters.JsonAuthenticationFilter;
 import com.ryanberg.srs.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -43,10 +44,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
         RestAuthenticationSuccessHandler successHandler = new RestAuthenticationSuccessHandler();
         successHandler.setSecurityHeaderUtil(headerUtil);
 
-        http.addFilterBefore(authenticationFilter(), LogoutFilter.class)
+        http
+                .addFilterBefore(authenticationFilter(), LogoutFilter.class)
 
                 .csrf().disable()
-                .formLogin().successHandler(successHandler).failureHandler(new RestAuthenticationFailureHandler())
+                .apply(new RestLoginConfigurer<HttpSecurity>())
+                .successHandler(successHandler).failureHandler(new RestAuthenticationFailureHandler())
                 .loginProcessingUrl("/login")
 
                 .and()
@@ -67,6 +70,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .and()
 
                 .authorizeRequests()
+                .antMatchers(HttpMethod.GET, "/greeting").permitAll()
                 .antMatchers(HttpMethod.POST, "/login").permitAll()
                 .antMatchers(HttpMethod.POST, "/logout").authenticated()
                 .antMatchers(HttpMethod.GET, "/**").authenticated()
@@ -83,6 +87,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
         headerAuthenticationFilter.setUserDetailsService(userDetailsService());
         headerAuthenticationFilter.setHeaderUtil(headerUtil);
         return headerAuthenticationFilter;
+    }
+
+    private Filter jsonAuthenticationFilter()
+    {
+        return new JsonAuthenticationFilter();
     }
 
 

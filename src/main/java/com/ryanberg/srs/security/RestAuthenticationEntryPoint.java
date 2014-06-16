@@ -17,16 +17,28 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException
     {
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode node = mapper.createObjectNode()
-                .put("error", true)
-                .put("cause", "NOT AUTHENTICATED")
-                .put("message", "Authentication is required to access this resource.");
-        PrintWriter out = response.getWriter();
-        out.print(node.toString());
-        out.flush();
-        out.close();
+        if (isPreflight(request)) {
+            response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        }
+        else {
+
+            response.setContentType("application/json");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode node = mapper.createObjectNode()
+                    .put("error", true)
+                    .put("cause", "NOT AUTHENTICATED")
+                    .put("message", "Authentication is required to access this resource.");
+            PrintWriter out = response.getWriter();
+            out.print(node.toString());
+            out.flush();
+            out.close();
+
+        }
+    }
+
+    private boolean isPreflight(HttpServletRequest request)
+    {
+        return "OPTIONS".equals(request.getMethod());
     }
 }
