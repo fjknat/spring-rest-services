@@ -6,9 +6,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractAu
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
-/**
- * Created by rberg on 6/15/14.
- */
 public class RestLoginConfigurer<H extends HttpSecurityBuilder<H>> extends AbstractAuthenticationFilterConfigurer<H, RestLoginConfigurer<H>, JsonAuthenticationFilter>
 {
 

@@ -18,14 +18,16 @@ public class CORSFilter extends OncePerRequestFilter
     private static final Logger logger = LoggerFactory.getLogger(CORSFilter.class);
 
     @Override
-    protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws ServletException, IOException
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException
     {
-        httpServletResponse.setHeader("Access-Control-Allow-Origin", "*");
-        httpServletResponse.setHeader("Access-Control-Allow-Methods", "PUT, POST, GET, OPTIONS, DELETE");
-        httpServletResponse.setHeader("Access-Control-Max-Age", "3600");
-        httpServletResponse.setHeader("Access-Control-Expose-Headers", "X-Auth-Token");
-        httpServletResponse.setHeader("Access-Control-Allow-Headers", "accept, content-type");
-        filterChain.doFilter(httpServletRequest, httpServletResponse);
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "PUT, POST, GET, OPTIONS, DELETE");
+        response.setHeader("Access-Control-Max-Age", "3600");
+        response.setHeader("Access-Control-Expose-Headers", "X-Auth-Token");
+        // allow all headers
+        response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"));
+
+        filterChain.doFilter(request, response);
     }
 
 }
