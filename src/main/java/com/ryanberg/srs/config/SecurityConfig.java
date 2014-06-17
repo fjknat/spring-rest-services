@@ -1,7 +1,5 @@
 package com.ryanberg.srs.config;
 
-
-import com.ryanberg.srs.filters.JsonAuthenticationFilter;
 import com.ryanberg.srs.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +9,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 import javax.servlet.Filter;
@@ -20,21 +20,22 @@ import javax.sql.DataSource;
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter
 {
-
-    private static final String tokenKey = "5BD92B21-1AE5-444E-8C54-BA6DF24BFC28";
-
     @Autowired
     private DataSource dataSource;
 
     @Autowired
-    private SecurityHeaderUtil headerUtil;
+    private SecurityHeaderHelper headerHelper;
 
     @Autowired
     public void registerGlobalAuthentication(AuthenticationManagerBuilder auth) throws Exception
     {
-        auth.inMemoryAuthentication()
-                .withUser("user").password("password").roles("USER").and()
-                .withUser("admin").password("password").roles("USER", "ADMIN");
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+        auth
+                .jdbcAuthentication().withDefaultSchema().dataSource(dataSource)
+                .passwordEncoder(passwordEncoder)
+                .withUser("user").password(passwordEncoder.encode("password")).roles("USER").and()
+                .withUser("admin").password(passwordEncoder.encode("password")).roles("USER", "ADMIN");
 
     }
 
@@ -42,7 +43,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
     protected void configure(HttpSecurity http) throws Exception
     {
         RestAuthenticationSuccessHandler successHandler = new RestAuthenticationSuccessHandler();
-        successHandler.setSecurityHeaderUtil(headerUtil);
+        successHandler.setSecurityHeaderUtil(headerHelper);
 
         http
                 .addFilterBefore(authenticationFilter(), LogoutFilter.class)
@@ -85,14 +86,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
     {
         HeaderTokenAuthenticationFilter headerAuthenticationFilter = new HeaderTokenAuthenticationFilter();
         headerAuthenticationFilter.setUserDetailsService(userDetailsService());
-        headerAuthenticationFilter.setHeaderUtil(headerUtil);
+        headerAuthenticationFilter.setHeaderHelper(headerHelper);
         return headerAuthenticationFilter;
     }
-
-    private Filter jsonAuthenticationFilter()
-    {
-        return new JsonAuthenticationFilter();
-    }
-
-
 }

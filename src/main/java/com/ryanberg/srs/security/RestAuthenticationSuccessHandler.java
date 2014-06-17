@@ -16,7 +16,7 @@ import java.security.GeneralSecurityException;
 public class RestAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler
 {
 
-    private SecurityHeaderUtil headerUtil;
+    private SecurityHeaderHelper headerUtil;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -38,7 +38,7 @@ public class RestAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuc
 
     }
 
-    public void setSecurityHeaderUtil(SecurityHeaderUtil headerUtil)
+    public void setSecurityHeaderUtil(SecurityHeaderHelper headerUtil)
     {
         this.headerUtil = headerUtil;
     }

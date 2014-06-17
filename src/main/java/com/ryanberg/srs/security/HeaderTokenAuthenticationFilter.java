@@ -24,7 +24,7 @@ public class HeaderTokenAuthenticationFilter extends GenericFilterBean
 {
 
     private UserDetailsService userDetailsService;
-    private SecurityHeaderUtil headerUtil;
+    private SecurityHeaderHelper headerHelper;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException
@@ -36,7 +36,7 @@ public class HeaderTokenAuthenticationFilter extends GenericFilterBean
             SecurityContextHolder.setContext(contextBeforeChainExecution);
             if (contextBeforeChainExecution.getAuthentication() != null && contextBeforeChainExecution.getAuthentication().isAuthenticated()) {
                 String userName = (String) contextBeforeChainExecution.getAuthentication().getPrincipal();
-                headerUtil.addHeader((HttpServletResponse) servletResponse, userName);
+                headerHelper.addHeader((HttpServletResponse) servletResponse, userName);
             }
             filterChain.doFilter(servletRequest, servletResponse);
         }
@@ -60,7 +60,7 @@ public class HeaderTokenAuthenticationFilter extends GenericFilterBean
     private UserDetails loadUserDetails(HttpServletRequest request)
     {
 
-        String userName = headerUtil.getUserName(request);
+        String userName = headerHelper.getUserName(request);
         return userName != null ? userDetailsService.loadUserByUsername(userName) : null;
 
     }
@@ -70,8 +70,8 @@ public class HeaderTokenAuthenticationFilter extends GenericFilterBean
         this.userDetailsService = userDetailsService;
     }
 
-    public void setHeaderUtil(SecurityHeaderUtil headerUtil)
+    public void setHeaderHelper(SecurityHeaderHelper headerHelper)
     {
-        this.headerUtil = headerUtil;
+        this.headerHelper = headerHelper;
     }
 }
