@@ -15,8 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Custom authentication filter to parse JSON credentials
- * <p/>
- * If request content type is not application/json functionality is delegated to super
  */
 public class JsonAuthenticationFilter extends UsernamePasswordAuthenticationFilter
 {
