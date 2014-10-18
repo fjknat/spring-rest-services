@@ -24,20 +24,23 @@ public class HeaderTokenAuthenticationFilter extends GenericFilterBean
 {
 
     private UserDetailsService userDetailsService;
-    private SecurityHeaderHelper headerHelper;
+    private TokenUtils tokenUtils;
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException
     {
         UserDetails userDetails = loadUserDetails((HttpServletRequest) servletRequest);
-        SecurityContext contextBeforeChainExecution = createSecurityContext(userDetails);
+        SecurityContext securityContext = createSecurityContext(userDetails);
 
         try {
-            SecurityContextHolder.setContext(contextBeforeChainExecution);
-            if (contextBeforeChainExecution.getAuthentication() != null && contextBeforeChainExecution.getAuthentication().isAuthenticated()) {
-                String userName = (String) contextBeforeChainExecution.getAuthentication().getPrincipal();
-                headerHelper.addHeader((HttpServletResponse) servletResponse, userName);
+
+            SecurityContextHolder.setContext(securityContext);
+
+            if (securityContext.getAuthentication() != null && securityContext.getAuthentication().isAuthenticated()) {
+                String userName = (String) securityContext.getAuthentication().getPrincipal();
+                tokenUtils.addHeader((HttpServletResponse) servletResponse, userName);
             }
+
             filterChain.doFilter(servletRequest, servletResponse);
         }
         finally {
@@ -49,20 +52,21 @@ public class HeaderTokenAuthenticationFilter extends GenericFilterBean
     private SecurityContext createSecurityContext(UserDetails userDetails)
     {
         if (userDetails != null) {
+
             SecurityContextImpl securityContext = new SecurityContextImpl();
-            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails.getUsername(), userDetails.getPassword(), userDetails.getAuthorities());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails.getUsername(),
+                    null, userDetails.getAuthorities());
             securityContext.setAuthentication(authentication);
             return securityContext;
+
         }
         return SecurityContextHolder.createEmptyContext();
     }
 
     private UserDetails loadUserDetails(HttpServletRequest request)
     {
-
-        String userName = headerHelper.getUserName(request);
+        String userName = tokenUtils.getUserName(request);
         return userName != null ? userDetailsService.loadUserByUsername(userName) : null;
-
     }
 
     public void setUserDetailsService(UserDetailsService userDetailsService)
@@ -70,8 +74,8 @@ public class HeaderTokenAuthenticationFilter extends GenericFilterBean
         this.userDetailsService = userDetailsService;
     }
 
-    public void setHeaderHelper(SecurityHeaderHelper headerHelper)
+    public void setTokenUtils(TokenUtils tokenUtils)
     {
-        this.headerHelper = headerHelper;
+        this.tokenUtils = tokenUtils;
     }
 }

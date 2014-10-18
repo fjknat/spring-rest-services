@@ -11,7 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.Filter;
 import javax.sql.DataSource;
@@ -24,7 +24,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
     private DataSource dataSource;
 
     @Autowired
-    private SecurityHeaderHelper headerHelper;
+    private TokenUtils tokenHelper;
 
     @Autowired
     public void registerGlobalAuthentication(AuthenticationManagerBuilder auth) throws Exception
@@ -43,10 +43,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
     protected void configure(HttpSecurity http) throws Exception
     {
         RestAuthenticationSuccessHandler successHandler = new RestAuthenticationSuccessHandler();
-        successHandler.setSecurityHeaderUtil(headerHelper);
+        successHandler.setSecurityHeaderUtil(tokenHelper);
 
         http
-                .addFilterBefore(authenticationFilter(), LogoutFilter.class)
+                .addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class)
 
                 .csrf().disable()
                 .apply(new RestLoginConfigurer<HttpSecurity>())
@@ -86,7 +86,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
     {
         HeaderTokenAuthenticationFilter headerAuthenticationFilter = new HeaderTokenAuthenticationFilter();
         headerAuthenticationFilter.setUserDetailsService(userDetailsService());
-        headerAuthenticationFilter.setHeaderHelper(headerHelper);
+        headerAuthenticationFilter.setTokenUtils(tokenHelper);
         return headerAuthenticationFilter;
     }
 }

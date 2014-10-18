@@ -26,7 +26,7 @@ public class RestAuthenticationFailureHandler extends SimpleUrlAuthenticationFai
         try {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             ObjectMapper mapper = new ObjectMapper();
-            ObjectNode node = mapper.createObjectNode().put("error", "true").put("message", "Authentication failed.").put("cause", "BAD_USERNAME_PASSWORD");
+            ObjectNode node = mapper.createObjectNode().put("error", "true").put("message", "Unauthorized: Authentication failed.").put("cause", "BAD_CREDENTIALS");
             PrintWriter out = response.getWriter();
             out.print(node.toString());
             out.flush();

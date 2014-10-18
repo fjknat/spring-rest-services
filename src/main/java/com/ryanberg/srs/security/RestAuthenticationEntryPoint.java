@@ -27,8 +27,8 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode node = mapper.createObjectNode()
                     .put("error", true)
-                    .put("cause", "NOT AUTHENTICATED")
-                    .put("message", "Authentication is required to access this resource.");
+                    .put("cause", "UNAUTHORIZED")
+                    .put("message", "Unauthorized: Authentication token was either missing or invalid.");
             PrintWriter out = response.getWriter();
             out.print(node.toString());
             out.flush();

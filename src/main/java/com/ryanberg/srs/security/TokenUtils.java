@@ -17,9 +17,8 @@ import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 
 @Component
-public class SecurityHeaderHelper
-{
-    private static final Logger logger = LoggerFactory.getLogger(SecurityHeaderHelper.class);
+public class TokenUtils {
+    private static final Logger logger = LoggerFactory.getLogger(TokenUtils.class);
 
     private final String HEADER_SECURITY_TOKEN = "X-Auth-Token";
 
@@ -29,39 +28,33 @@ public class SecurityHeaderHelper
     private Environment environment;
 
     @PostConstruct
-    private void init()
-    {
+    private void init() {
         tokenService.setServerInteger(environment.getRequiredProperty("auth.server.integer", Integer.class));
         tokenService.setServerSecret(environment.getRequiredProperty("auth.server.secret"));
         tokenService.setPseudoRandomNumberBytes(environment.getRequiredProperty("auth.token.length", Integer.class));
         tokenService.setSecureRandom(new SecureRandom());
     }
 
-    public String getUserName(HttpServletRequest request)
-    {
+    public String getUserName(HttpServletRequest request) {
         String header = request.getHeader(HEADER_SECURITY_TOKEN);
         return Strings.isNullOrEmpty(header) ? null : extractUserName(header);
     }
 
-    private String extractUserName(String value)
-    {
+    private String extractUserName(String value) {
         Token token = tokenService.verifyToken(value);
         return token.getExtendedInformation();
     }
 
-    public void addHeader(HttpServletResponse response, String username)
-    {
+    public void addHeader(HttpServletResponse response, String username) {
         try {
             String encryptedValue = createAuthToken(username);
             response.setHeader(HEADER_SECURITY_TOKEN, encryptedValue);
-        }
-        catch (IOException | GeneralSecurityException e) {
+        } catch (IOException | GeneralSecurityException e) {
             logger.error("Unable to generate header auth token", e);
         }
     }
 
-    public String createAuthToken(String username) throws IOException, GeneralSecurityException
-    {
+    public String createAuthToken(String username) throws IOException, GeneralSecurityException {
         Token token = tokenService.allocateToken(username);
         return token.getKey();
     }

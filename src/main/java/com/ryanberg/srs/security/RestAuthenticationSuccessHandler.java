@@ -16,14 +16,14 @@ import java.security.GeneralSecurityException;
 public class RestAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler
 {
 
-    private SecurityHeaderHelper headerUtil;
+    private TokenUtils tokenUtils;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws ServletException, IOException
     {
         try {
-            String token = headerUtil.createAuthToken(((User) authentication.getPrincipal()).getUsername());
+            String token = tokenUtils.createAuthToken(((User) authentication.getPrincipal()).getUsername());
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode node = mapper.createObjectNode().put("token", token);
             PrintWriter out = response.getWriter();
@@ -38,8 +38,8 @@ public class RestAuthenticationSuccessHandler extends SimpleUrlAuthenticationSuc
 
     }
 
-    public void setSecurityHeaderUtil(SecurityHeaderHelper headerUtil)
+    public void setSecurityHeaderUtil(TokenUtils headerUtil)
     {
-        this.headerUtil = headerUtil;
+        this.tokenUtils = headerUtil;
     }
 }

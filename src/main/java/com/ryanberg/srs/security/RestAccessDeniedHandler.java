@@ -22,8 +22,8 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode node = mapper.createObjectNode()
                 .put("error", true)
-                .put("cause", "INSUFFICIENT PRIVILEGES")
-                .put("message", "You do not have the privileges to access this resource.");
+                .put("cause", "FORBIDDEN")
+                .put("message", "Forbidden: You do not have the privileges to access this resource.");
         PrintWriter out = response.getWriter();
         out.print(node.toString());
         out.flush();
